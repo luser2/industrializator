@@ -28,49 +28,46 @@ class Building
         resources[:beer]-=1
 	beer_bonus=3
       end
-      power_from = nil
-      if @water_power
-        power_from = :water
-      elsif resources[:horse] > 0 && @horse_power
-        power_from = :horse
-      elsif @electronized
-        power_from = :electricity if $electricity > 0
-      elsif @steam_engine
-        make_fuel
-        power_from = :fuel if resources[:fuel] > 0 
-      end
-
-      if power_from
+      make_power
+      if resources[:power] > 0
         return if !yield
-        if power_from == :electricity
-	  $electricity-=1
-	elsif power_from = :water
-          ;
-        else
-	  resources[power_from] -= 1
-	end
+        resources[:power] -= 1
         (2 + 3 * beer_bonus).times{return if !yield}
       end
     }
   end
-  def make_fuel
-    while resources[:fuel]<100 
-       stop = true
-       if resources[:wood]>0
-         resources[:wood]-=1
-         resources[:fuel]+=1
-       elsif resources[:charcoal]>0
-	 resources[:charcoal]-=1
-         resources[:fuel]+=3
-       elsif resources[:coal]>0
-         resources[:coal]-=1
-         resources[:fuel]+=10
-       elsif $castle.resources[:electricity]>0
- 	 $castle.resources[:electricity]-=1
-	 resources[:fuel]+=1
-       else
-         break
-       end
+  def make_power
+    return if resources[:power] > 0
+    if @water_power
+      resources[:power] = 1
+    elsif resources[:horse] > 0 && @horse_power
+      resources[:power] = 1
+      resources[:horse] -= 1
+    elsif @steam_engine
+      make_fuel
+      resources[:fuel] -= 1
+      resources[:power] = 1
+    elsif @electronized && $castle.resources[:electricity] > 0
+      resources[:power] = 1
+      $castle.resources[:electricity] -= 1
+
+    end
+  end
+
+  def make_fuel(amount = 1)
+    return if  resources[:fuel] >= amount
+    if @electronized && $castle.resources[:electricity]>0
+      $castle.resources[:electricity]-=1
+      resources[:fuel]+=1
+    elsif resources[:coal]>0
+      resources[:coal]-=1
+      resources[:fuel]+=10
+    elsif resources[:charcoal]>0
+      resources[:charcoal]-=1
+      resources[:fuel]+=3
+    elsif resources[:wood]>0
+      resources[:wood]-=1
+      resources[:fuel]+=1
     end
   end
   def trade(from=trade_from,to=trade_to)
@@ -82,6 +79,9 @@ class Building
       else
         last = r
         amount = 1 
+      end
+      if r == :fuel
+	amount.times{make_fuel(amount)}
       end
       return false if resources[r]<amount
     }
@@ -282,7 +282,6 @@ B..BbB
  B__B")
 end
 def produce
-  make_fuel
   population{trade}
 end
 end
