@@ -22,7 +22,9 @@ Researchs<<Research.new("trade",100,["sailing","currency"]){}
 
 Researchs<<Research.new("navigation",100,["sailing"]){}
 
-Researchs<<Research.new("mining",100,["brewing"]){$canbuild << Prospector; $canbuild << Mine}
+Researchs<<Research.new("mining",100,[]){$canbuild << Prospector; $canbuild << Mine}
+Researchs<<Research.new("construction",100,["mining"]){}
+
 Researchs<<Research.new("smelting",100,["mining"]){$canbuild << CharcoalMaker; $canbuild << Smithy}
 Researchs<<Research.new("plow",100,["smelting"]){
   if $castle.resources[:tools] < 100

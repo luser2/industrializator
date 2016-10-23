@@ -160,7 +160,12 @@ UUUUU
 UOUOUUUU
 UUUUUUUU
 UU#UUUUU")
-  @max_population = 5
+
+  @max_population = 2
+  if (Researched["construction"])
+    @cost = {:wood=>90,:stone=>30}
+    @max_population = 5
+  end
 end
 
 def produce
@@ -209,14 +214,31 @@ end
 end
 
 
+
 class Barracks < Building
 def initialize
   super("Barracks", {:wood=>40},[],[],"\
 1 B 1
 BB|BB
 B_X_B")
+  @max_population = 3
+  @soldiers = []
+end
+def produce
+  i = 0
+  population{
+    if @soldiers[i]
+      @soldiers[i].progress
+    else
+      @soldiers[i] = Soldier.new(self)
+    end
+    i+=1
+  }
+  @soldiers = @soldiers[0...i]
 end
 end
+
+
 class CartMaker < Building
 def initialize
   super("Cart Maker", {:wood=>40},[],[],"\
@@ -255,7 +277,7 @@ end
 
 class Smithy < Building
 def initialize
-  super("Smithy", {:stone=>30},[],[:tools,:weapons],"\
+  super("Smithy", {:stone=>30},[],[:tools,:stone_club,:copper_sword,:bronze_sword,:iron_sword],"\
 #####
 ####
  ##
@@ -263,9 +285,10 @@ def initialize
 end
   def produce
     population{
-      trade([:copper_ore,:wood],[:copper])||
+      trade([:stone,:wood],[:stone_club])||
+      trade([:copper_ore,:fuel],[:copper])||
       trade([:copper,:copper,:wood,:wood],[:tools])||
-      trade([:bronze_ore,:charcoal],[:bronze])||
+      trade([:copper_ore,:zinc_ore,:charcoal],[:bronze])||
       trade([:bronze,:wood],[:tools])||
       trade([:iron,:wood],[:tools,:tools])
 
@@ -276,7 +299,7 @@ end
 
 class Brewery < Building
 def initialize
-  super("Beer brewery", {:wood=>40},[:food,:fuel],[:beer,:beer,:beer],
+  super("Beer brewery", {:wood=>40},[:food,:food,:fuel],[:beer,:beer,:beer,:beer,:beer,:beer],
 " B--B
 B..BbB
  B__B")

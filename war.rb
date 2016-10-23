@@ -1,3 +1,39 @@
+
+class Soldier
+  def initialize(barracks)
+    @barracks=barracks
+    @training=0
+    @weapon = nil
+    @armor = nil
+    @horse = nil
+  end
+  def progress
+    if !@weapon
+      if @barracks.resources[:bow] >= 5
+	@weapon = :bow
+	@barracks.resources[:bow] -= 5
+      end
+      if @barracks.resources[:stone_club] >= 5
+	@weapon = :stone_club
+	@barracks.resources[:stone_club] -= 5
+      end
+      @training = 0
+    end
+    if !@horse && @barracks.resources[:horse] >= 5
+      @horse = true
+      @barracks.resources[:horse] -= 5
+      @training = 0
+    end
+    if @weapon != :bow && !@armor
+      if @barracks.resources[:leather_armor] >= 5
+        @armor = :leather_armor
+        @barracks.resources[:leather_armor] -= 5
+      end         
+    end
+    @training+=1
+  end
+end
+
 def attackmenu
   country = nil
   neighbor = false
