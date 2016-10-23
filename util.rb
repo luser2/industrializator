@@ -30,7 +30,7 @@ def atradius(rad)
 end
 
 def sgn(x)
-	return -1 if x<0
-  return -1 if x>0
-	return 0
+  return -1 if x<0
+  return 1 if x>0
+  return 0
 end

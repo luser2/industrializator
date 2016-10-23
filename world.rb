@@ -1,6 +1,6 @@
 class World
   attr_accessor :element,:building,:player,:minerals,:color
-  def initialize
+  def initialize(map="./world1.map")
      @player=Array2D.new
      @element=Array2D.new{?#}
      @minerals = Array2D.new
@@ -19,7 +19,7 @@ class World
 
      @building=Array2D.new
 		x=y=0
-		File.open("./world1.map"){|f|
+		File.open(map){|f|
 			while (c=f.getc)
 				if c==?\n 
 					@element[x,y]=?#
