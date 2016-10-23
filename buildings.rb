@@ -216,6 +216,7 @@ end
 
 
 class Barracks < Building
+  attr_reader :soldiers
 def initialize
   super("Barracks", {:wood=>40},[],[],"\
 1 B 1

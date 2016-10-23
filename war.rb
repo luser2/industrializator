@@ -33,6 +33,9 @@ class Soldier
     end
     @training+=1
   end
+  def killed(enemy)
+    true
+  end
 end
 
 class Unit
@@ -40,13 +43,15 @@ class Unit
   attr_accessor :x,:y,:range
   attr_accessor :hp,:mp,:maxmp
   attr_accessor :player,:soldiers,:attacked,:units
-  def initialize(x,y,p,u)
+  def initialize(x,y,p,u,soldiers)
     @x = x
     @y = y
+    $battle.element[x,y]=?@
     @range = 1
     @maxmp = 1
     @player = p
     @units = u
+    @soldiers = soldiers
     startturn
   end
   def move(nx,ny)
@@ -59,10 +64,26 @@ class Unit
         $y = ny
   end
   def canattack
-    true
+    units.each{|u|
+      return u if (u.x-x)**2+(u.y-y)**2<=range && u.player != player
+    }
+    nil
   end
-  def attack
+  def attack(u)
     @attacked = true
+    soldiers.each{|s|
+      if u.soldiers[-1]
+        u.soldiers.pop if s.killed(u.soldiers[-1])
+      end
+    }
+    u.soldiers.each{|s|
+      if soldiers[-1]
+        soldiers.pop if s.killed(soldiers[-1])
+      end
+    }
+    $battle.element[u.x,u.y]=?+ if !u.alive
+    $battle.element[x,y]=?+ if !alive
+
   end
   def startturn
 	@mp = maxmp
@@ -72,13 +93,35 @@ class Unit
 	$y=y
   end
   def aiturn
-    sx = sgn(units[0].x - x)
-    sy = sgn(units[0].y - y)
+    target = nil
+	$out.puts inspect
+    units.each{|u|
+	$out.puts u.inspect
+	$out.puts u.alive
+	$out.puts player
+       target = u if u.alive && u.player != player 
+    }
+    return if !target
+    sx = sgn(target.x - x)
+    sy = sgn(target.y - y)
     move(x + sx, y + sy) if $battle.element[x+sx,y+sy] == ?\ 
-    $out.puts "#{units[0].x} #{x} #{sx} #{units.inspect}"
+    if canattack
+      attack(canattack)
+    end
+  end
+  def alive 
+    @soldiers.size > 0
   end
 end
 
+def emptyleft
+  100.times{|x|
+  100.times{|y| return [x,y] if $battle.element[x,y]==?\ }}
+end
+def emptyright
+  100.downto(0){|x|
+  100.times{|y| return [x,y] if $battle.element[x,y]==?\ }}
+end
 
 def attackmenu
   country = nil
@@ -97,23 +140,41 @@ def attackmenu
   $battle = World.new("combat1.map")
 
   units = []
-  units << Unit.new(3,3,0,units)
-  units << Unit.new(8,8,1,units)
-
-  endbattle = false
-  p0units = 0
-  p1units = 0
-  units.each{|u|
-	p0units+=1 if u.player == 0
-	p1units+=1 if u.player == 1
+  p0soldiers = []
+  $buildings.each{|b|
+    if b.is_a? Barracks
+      p0soldiers += b.soldiers
+    end
+  }
+  p0army = []
+  p0soldiers.each{|s|
+   x,y = *emptyleft
+   p0army << Unit.new(x,y,0,units,[s])
   }
 
+
+  p1soldiers=[Soldier.new(nil)]
+  p1army = []
+   p1soldiers.each{|s|
+   x,y = *emptyright
+   p1army << Unit.new(x,y,1,units,[s])
+  }
+ 
+ 
+  endbattle = false
+  
+
+  units.unshift(*p0army)
+  units.unshift(*p1army)
   i = 0
   units[0].startturn
-
+  p0units = 1
+  p1units = 1
+  $out.puts units.inspect
   while (p0units > 0 && p1units > 0)
     nextunit = false
     $unit = units[i]
+    if $unit.alive
     if $unit.player == 0
       if $unit.mode == :move && $unit.mp == 0
         if $unit.canattack
@@ -130,13 +191,16 @@ def attackmenu
       $unit.aiturn
       nextunit = true
     end
+    else
+      nextunit = true
+    end
 
-      Info.addstr(2,"moves: #{$unit.mp}/#{$unit.maxmp}")
-      Info.addstr(3,"mode: #{$unit.mode}")
-      Info.addstr(3,"mode: #{$unit.mode}")
+    Info.addstr(2,"moves: #{$unit.mp}/#{$unit.maxmp}")
+    Info.addstr(3,"mode: #{$unit.mode}")
+    Info.addstr(3,"mode: #{$unit.mode}")
 
-      Info.refresh
-      $battle.draw
+    Info.refresh
+    $battle.draw
     if nextunit
       i = (i + 1)% units.size
       $unit = units[i]
@@ -145,6 +209,12 @@ def attackmenu
       c=getcmd
       BattleCommands[c].act(true) if BattleCommands[c]
     end
+    p0units = 0
+    p1units = 0
+    units.each{|u| 
+	p0units+=1 if u.player == 0 && u.alive
+	p1units+=1 if u.player == 1 && u.alive
+    }
   end
 
   $x=oldx
