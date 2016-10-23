@@ -17,9 +17,9 @@ class Building
     self.new.cost
   end
   def population
-    food = [resources[:food],max_population].min
-    food = max_population if @foodless
-    food.times{
+    max_population.times{
+      make_food
+      return if resources[:food] == 0 && !@foodless
       beer_bonus=0
       return if !yield
       resources[:food]-=1 if !@foodless
@@ -36,41 +36,30 @@ class Building
       end
     }
   end
+  def make_food
+    return if resources[:food] > 0
+    trade([:bread],[:food]*3) ||
+    trade([:grain],[:food])
+  end
+  
   def make_power
     return if resources[:power] > 0
-    if @water_power
-      resources[:power] = 1
-    elsif resources[:horse] > 0 && @horse_power
-      resources[:power] = 1
-      resources[:horse] -= 1
-    elsif @steam_engine
-      make_fuel
-      resources[:fuel] -= 1
-      resources[:power] = 1
-    elsif @electronized && $castle.resources[:electricity] > 0
-      resources[:power] = 1
-      $castle.resources[:electricity] -= 1
-
-    end
+    (@water_power && trade([],[:power])) || 
+    (@horse_power  && trade([:horse],[:power])) || 
+    (@steam_engine && trade([:fuel],[:power])) || 
+    (@electronized && trade([:electricity],[:power]))
   end
 
   def make_fuel(amount = 1)
     return if  resources[:fuel] >= amount
-    if @electronized && $castle.resources[:electricity]>0
-      $castle.resources[:electricity]-=1
-      resources[:fuel]+=1
-    elsif resources[:coal]>0
-      resources[:coal]-=1
-      resources[:fuel]+=10
-    elsif resources[:charcoal]>0
-      resources[:charcoal]-=1
-      resources[:fuel]+=3
-    elsif resources[:wood]>0
-      resources[:wood]-=1
-      resources[:fuel]+=1
-    end
+    
+    (@electronized && trade([:electricity],[:fuel])) || 
+    trade([:coal],[:fuel]*10) || 
+    trade([:charcoal],[:fuel]*3) || 
+    trade([:wood],[:fuel])
   end
   def trade(from=trade_from,to=trade_to)
+    resources[:electricity] = $castle.resources[:electricity]
     last = nil
     amount = 0
     from.each{|r|
@@ -87,6 +76,7 @@ class Building
     }
     from.each{|r| resources[r] -= 1}
     to.each{|r| resources[r] += 1}
+    $castle.resources[:electricity] = resources[:electricity]
     return true
   end
 end
@@ -202,6 +192,7 @@ S   S
 end
 def produce
   @active = true if resources[:horse] > 0
+  make_food
   if resources[:food] == 0
     resources[:horse] = 0
     @active = false 
@@ -300,7 +291,7 @@ end
 
 class Brewery < Building
 def initialize
-  super("Beer brewery", {:wood=>40},[:food,:food,:fuel],[:beer,:beer,:beer,:beer,:beer,:beer],
+  super("Beer brewery", {:wood=>40},[:grain, :grain,:fuel],[:beer] * 6,
 " B--B
 B..BbB
  B__B")
@@ -310,6 +301,20 @@ def produce
 end
 end
 
+class Bakery < Building
+def initialize
+  super("Bread bakery", {:wood=>40},[:grain,:fuel],[:bread] * 2,
+" -B- 
+/...\\
+B___B")
+end
+def produce
+  population{trade}
+end
+end
+
+
+
 
 class Farm < Building
 def initialize
@@ -318,14 +323,14 @@ def initialize
 	@horse_power = true
   end
   if Researched["plow"]
- super("farm",{:wood=>30,:tools=>10},[],[:food],"\
+ super("farm",{:wood=>30,:tools=>10},[],[:grain],"\
 FFFF
 FooF
 FooF
 FFFF
 ")
   else
-  super("big farm",{:wood=>30},[],[:food],"\
+  super("big farm",{:wood=>30},[],[:grain],"\
 FFFFF
 FoooF
 FoooF

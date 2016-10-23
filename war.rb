@@ -6,7 +6,7 @@ class Soldier
     @training=0
     @weapon = nil
     @armor = nil
-    @horse = nil
+    @vehicle = nil
   end
   def progress
     if !@weapon
@@ -20,8 +20,8 @@ class Soldier
       end
       @training = 0
     end
-    if !@horse && @barracks.resources[:horse] >= 5
-      @horse = true
+    if !@vehicle && @barracks.resources[:horse] >= 5
+      @vehicle = :horse
       @barracks.resources[:horse] -= 5
       @training = 0
     end
@@ -33,6 +33,10 @@ class Soldier
     end
     @training+=1
   end
+  def mp
+    return 2 if @vehicle == :horse
+    return 1
+  end
   def killed(enemy)
     true
   end
@@ -42,13 +46,13 @@ class Unit
   attr_accessor :mode
   attr_accessor :x,:y,:range
   attr_accessor :hp,:mp,:maxmp
-  attr_accessor :player,:soldiers,:attacked,:units
+  attr_accessor :player,:soldiers,:attacked,:units,:first_strike
   def initialize(x,y,p,u,soldiers)
     @x = x
     @y = y
     $battle.element[x,y]=?@
     @range = 1
-    @maxmp = 1
+    @maxmp = soldiers[0].mp
     @player = p
     @units = u
     @soldiers = soldiers
@@ -71,14 +75,16 @@ class Unit
   end
   def attack(u)
     @attacked = true
-    soldiers.each{|s|
+    v = self
+    u, v = v, u if u.first_strike && !v.first_strike
+    v.soldiers.each{|s|
       if u.soldiers[-1]
         u.soldiers.pop if s.killed(u.soldiers[-1])
       end
     }
     u.soldiers.each{|s|
-      if soldiers[-1]
-        soldiers.pop if s.killed(soldiers[-1])
+      if v.soldiers[-1]
+        v.soldiers.pop if s.killed(v.soldiers[-1])
       end
     }
     $battle.element[u.x,u.y]=?+ if !u.alive

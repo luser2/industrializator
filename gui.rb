@@ -67,7 +67,7 @@ class Msgwindow < Gamewindow
 		refresh
 	end
 	def refresh
-		5.times{|i|@curs.setpos(i,0);@curs.addstr(@data[@pos+(i-@hei)]+" "*(@wid-(@data[@pos+(i-@hei)] ).size ))}
+		5.times{|i|@curs.setpos(i,0);@curs.addstr(@data[@pos+(i-@hei)]+" "*[@wid-(@data[@pos+(i-@hei)] ).size,0].max )}
 		@curs.refresh
 	end
 	def pageup

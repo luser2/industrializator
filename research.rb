@@ -12,6 +12,8 @@ end
 Researched={}
 Researchs=[]
 Researchs<<Research.new("brewing",100,[]){$canbuild << Brewery}
+Researchs<<Research.new("baking",100,["brewing"]){$canbuild << Bakery}
+
 Researchs<<Research.new("warrior code",100,[]){$canbuild << Barracks}
 Researchs<<Research.new("archery",200,["warrior code"]){$canbuild << Fletcher}
 Researchs<<Research.new("horseback_riding",200,["warrior code","has_horses"]){$canbuild << Stables}
@@ -88,6 +90,8 @@ Researchs<<Research.new("nuclear power",100,["has uran"]){}
 Researchs<<Research.new("genetic engineering",100,["computers"]){}
 Researchs<<Research.new("einstein's virus",100,["genetic engineering"]){}
 Researchs<<Research.new("centaurs",100,["einstein's virus"]){}
+Researchs<<Research.new("weaver spider",100,["einstein's virus"]){}
+
 
 Researchs<<Research.new("superbamboo",100,["genetic engineering"]){}
 Researchs<<Research.new("hyperoats",100,["genetic engineering"]){}
@@ -96,6 +100,8 @@ Researchs<<Research.new("sugar virus",100,["superbamboo"]){}
 Researchs<<Research.new("oil beet",100,["genetic engineering", "refining"]){}
 Researchs<<Research.new("plastic yeast",100,["oil beet"]){}
 Researchs<<Research.new("nitrobeans",100,["plastic yeast"]){}
+Researchs<<Research.new("pop eye spinach",100,["nitrobeans"]){}
+
 
 
 
@@ -117,8 +123,12 @@ Researchs<<Research.new("lightsaber",100,["midichorians"]){}
 
 
 
-
 IntroResearch={}
+
+IntroResearch["oil beet"] = ""
+IntroResearch["pop eye spinach"] = "Scientists modified this strain of spinach to increase accumulation of iron. Burn it and you will get an iron ore. (new mode of a farm)"
+
+
 IntroResearch["brewing"] = "Now you can brew beer. That doubles quality of your life. Moreover it improves workforce, in a building when worker consumes food he converts resources into product. With a beer he does second conversion. These bonuses stack, with food and horse he works four times but if he has food, horse and beer he works eigth times. For brewing you need a fuel, you could use wood, charcoal or coal."
 IntroResearch["mining"] = "Now you could build mine to get stone from ten tile radius to build better buildings. Find more natural riches by prospector which when feed finds all ores in radius ten.
 
