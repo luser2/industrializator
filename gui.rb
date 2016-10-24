@@ -120,6 +120,6 @@ def popup(msg)
 end
 
 Map=Mapwindow.new(60,0,80,5)
-Disp=Displaywindow.new(0,0,60,20)
-Msg=Msgwindow.new(0,20,80,25)
-Info=Infowindow.new(60,0,80,20)
+Disp=Displaywindow.new(0,0,100,30)
+Msg=Msgwindow.new(0,30,100,35)
+Info=Infowindow.new(100,0,140,30)

@@ -21,32 +21,40 @@ class Building
     if Researched["construction"] && !@construction_upgrade && $castle.trade([:stone]*20,[])
       @max_population += 1
       @construction_upgrade  = true
-    else
-      popup("not enough stone to upgrade")
+      @cost[:stone]||=0
+      @cost[:stone]+=20 
+      return true
     end
-
+    return false
   end
 
   def population
+    @last_pop = 0
+    @last_beer = 0
+    @last_power = 0
     max_population.times{
       make_food
       return if resources[:food] == 0 && !@foodless
       beer_bonus=0
       return if !yield
       resources[:food]-=1 if !@foodless
+      @last_pop += 1
       if resources[:beer]>0
         return if !yield
+        @last_beer += 1
         resources[:beer]-=1
 	beer_bonus=3
       end
       make_power
       if resources[:power] > 0
         return if !yield
+        @last_power += 1
         resources[:power] -= 1
         (2 + 3 * beer_bonus).times{return if !yield}
       end
     }
   end
+
   def make_food
     return if resources[:food] > 0
     trade([:bread],[:food]*3) ||
@@ -89,6 +97,10 @@ class Building
     to.each{|r| resources[r] += 1}
     $castle.resources[:electricity] = resources[:electricity]
     return true
+  end
+
+  def utilization
+    "pop #{@last_pop}/#{@max_population} beer:#{@last_beer}/#{@last_pop} power:#{@last_power}/#{@last_pop}"
   end
 end
 
@@ -476,6 +488,7 @@ def canbuild(building,x,y)
   true
 end
 
+$autoupgrade = true
 def buildmenu
 if $trybuild
   if canbuild($trybuild,$x,$y)
@@ -503,6 +516,13 @@ choice = popup(text) - ?a
 return if !canafford[choice]
 $trybuild = $canbuild[choice].new 
 $trybuild.cost.each{|h,k| $castle.resources[h]-=k}
+
+if $autoupgrade
+  while $trybuild.upgrade
+    ;
+  end
+end
+
 end
 end
 

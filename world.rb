@@ -84,8 +84,11 @@ end
      end
      Info.addstr(0,"x:#{$x}, y:#{$y}")
      Info.addstr(1,"")
+     Info.addstr(2,"")
 
-     Info.addstr(1,building[$x,$y].resources.inspect) if building[$x,$y]
+     Info.addstr(1,building[$x,$y].resources.select{|h,k| k>0}.inspect) if building[$x,$y]
+     Info.addstr(2,building[$x,$y].utilization) if building[$x,$y]
+
      Disp.refresh
      Info.refresh
   end
