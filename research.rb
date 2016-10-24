@@ -142,6 +142,8 @@ IntroResearch["large hardron collidier"] = "Time to travel time is near. You cou
 
 IntroResearch["warrior code"] = "You don't have enough lebensraum. You noticed that you don't fit many buildings in your kingdom. Build barracks and feed an army to get more space. Then press W to with cursor on neighbour's border (B tile) to attack him."
 
+IntroResarch["construction"] = "Your masons could now upgrade buildings, press u on building to increase its max population by one for 20 stone."
+
 def researchmenu
   text = "Research\n"
   accessible = []

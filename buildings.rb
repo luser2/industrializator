@@ -16,6 +16,17 @@ class Building
   def self.cost
     self.new.cost
   end
+
+  def upgrade
+    if Researched["construction"] && !@construction_upgrade && $castle.trade([:stone]*20,[])
+      @max_population += 1
+      @construction_upgrade  = true
+    else
+      popup("not enough stone to upgrade")
+    end
+
+  end
+
   def population
     max_population.times{
       make_food
@@ -152,10 +163,6 @@ UUUUUUUU
 UU#UUUUU")
 
   @max_population = 2
-  if (Researched["construction"])
-    @cost = {:wood=>90,:stone=>30}
-    @max_population = 5
-  end
 end
 
 def produce

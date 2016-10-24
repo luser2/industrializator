@@ -60,7 +60,7 @@ Command.new(?b,"build"){buildmenu}
 Command.new(?s,"sell"){sellbuilding}
 Command.new(?R,"research"){researchmenu}
 Command.new(?W,"attack"){attackmenu}
-
+Command.new(?u,"upgrade"){$World.building[$x,$y].upgrade if $World.building[$x,$y]}
 
 Command.new(?x,"cancel build"){$trybuild = nil}
 
