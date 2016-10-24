@@ -430,6 +430,7 @@ nx=ny=0
 }
 return false if nearest == 100
 $World.element[nx,ny]=?\ 
+$World.color[nx,ny]=color_pair(COLOR_GREEN)|A_NORMAL
 $planttree<<[nx,ny]
 true
 end
@@ -532,7 +533,7 @@ def sellbuilding(b = $World.building[$x,$y])
     return
   end
   b.cost.each{|h,k| $castle.resources[h]+=k}
-
+  return if !b.x
    b.display.split("\n").each_with_index{|e,y1|
      e.split("").each_with_index{|c,x1|
      if c != " "
