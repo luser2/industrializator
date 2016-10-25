@@ -14,7 +14,9 @@ Researchs=[]
 Researchs<<Research.new("brewing",30,[]){$canbuild << Brewery}
 Researchs<<Research.new("baking",40,["brewing"]){$canbuild << Bakery}
 
-Researchs<<Research.new("warrior code",100,[]){$canbuild << Barracks}
+Researchs<<Research.new("warrior code",50,[]){$canbuild << Barracks}
+Researchs<<Research.new("tactics",100,[]){}
+
 Researchs<<Research.new("archery",200,["warrior code"]){$canbuild << Fletcher}
 Researchs<<Research.new("horseback_riding",200,["warrior code","has_horses"]){$canbuild << Stables}
 Researchs<<Research.new("wheel",200,["horseback_riding"]){$canbuild << CartMaker}

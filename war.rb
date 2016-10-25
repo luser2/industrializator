@@ -1,6 +1,7 @@
 require 'controls/battle.rb'
 
 class Soldier
+  attr_reader :weapon,:armor,:vehicle
   def initialize(barracks)
     @barracks=barracks
     @training=0
@@ -129,6 +130,35 @@ def emptyright
   100.times{|y| return [x,y] if $battle.element[x,y]==?\ }}
 end
 
+def soldiers_to_units(soldiers,coordinated,player,units)
+  army = []
+  u = []
+  soldiers.sort_by{|s| "#{s.weapon} #{s.armor} #{s.vehicle}"}.each{|s|
+
+   if u == []
+     u = [s]
+   elsif u.size < coordinated && u[0].weapon==s.weapon && u[0].armor == s.armor && u[0].vehicle == s.vehicle
+    u << s
+   else
+     if player == 0
+       x,y = *emptyleft
+     else
+      x,y = *emptyright
+     end
+     army << Unit.new(x,y,player,units,u)
+     u = [s]
+   end
+  }
+   if player == 0
+     x,y = *emptyleft
+   else
+    x,y = *emptyright
+   end
+  army << Unit.new(x,y,player,units,u)
+  $out.puts army.inspect
+  return army
+end
+
 def attackmenu
   country = nil
   neighbor = false
@@ -152,23 +182,22 @@ def attackmenu
       p0soldiers += b.soldiers
     end
   }
-  p0army = []
-  p0soldiers.each{|s|
-   x,y = *emptyleft
-   p0army << Unit.new(x,y,0,units,[s])
-  }
 
+  if  p0soldiers.size == 0
+    popup("you don't have any army to attack with.")
+    return
+  end
+
+  coordinated = 1
+  coordinated += 1 if Researched["tactics"] 
+
+  p0army = soldiers_to_units(p0soldiers,coordinated,0,units)
 
   p1soldiers=[Soldier.new(nil)]
-  p1army = []
-   p1soldiers.each{|s|
-   x,y = *emptyright
-   p1army << Unit.new(x,y,1,units,[s])
-  }
- 
+  
+  p1army = soldiers_to_units(p1soldiers,1,1,units)
  
   endbattle = false
-  
 
   units.unshift(*p0army)
   units.unshift(*p1army)
