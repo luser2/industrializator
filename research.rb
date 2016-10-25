@@ -11,8 +11,8 @@ class Research
 end
 Researched={}
 Researchs=[]
-Researchs<<Research.new("brewing",100,[]){$canbuild << Brewery}
-Researchs<<Research.new("baking",100,["brewing"]){$canbuild << Bakery}
+Researchs<<Research.new("brewing",30,[]){$canbuild << Brewery}
+Researchs<<Research.new("baking",40,["brewing"]){$canbuild << Bakery}
 
 Researchs<<Research.new("warrior code",100,[]){$canbuild << Barracks}
 Researchs<<Research.new("archery",200,["warrior code"]){$canbuild << Fletcher}
@@ -24,8 +24,8 @@ Researchs<<Research.new("trade",100,["sailing","currency"]){}
 
 Researchs<<Research.new("navigation",100,["sailing"]){}
 
-Researchs<<Research.new("mining",100,[]){$canbuild << Prospector; $canbuild << Mine}
-Researchs<<Research.new("construction",100,["mining"]){}
+Researchs<<Research.new("mining",10,[]){$canbuild << Prospector; $canbuild << Mine}
+Researchs<<Research.new("construction",20,["mining"]){}
 
 Researchs<<Research.new("smelting",100,["mining"]){$canbuild << CharcoalMaker; $canbuild << Smithy}
 Researchs<<Research.new("plow",100,["smelting"]){
