@@ -93,6 +93,9 @@ class Building
       end
       return false if resources[r]<amount
     }
+    to.each{|r|
+      return false if resources[r]>30
+    }
     from.each{|r| resources[r] -= 1}
     to.each{|r| resources[r] += 1}
     $castle.resources[:electricity] = resources[:electricity]
@@ -119,9 +122,8 @@ end
       sellbuilding(self)
       
       atradius(10){|x,y|
-        m = $World.minerals[sx+x,sy+y] 
-        a = 
-        if [?m,?M].index($World.element[sx+x,sy+y]) && !$World.building[sx+x,sy+y] && $World.minerals_amount[sx+x,sy+y]>0
+        m = $World.minerals[sx+x,sy+y] if $World.minerals_amount[sx+x,sy+y] > 0
+        if [?m,?M].index($World.element[sx+x,sy+y]) && !$World.building[sx+x,sy+y] 
 	   if m == :coal
 	     $World.element[sx+x,sy+y]=?c
 	   elsif m == :copper
@@ -296,7 +298,6 @@ def initialize
 end
   def produce
     population{
-      trade([:stone,:wood],[:stone_club])||
       trade([:copper_ore,:fuel],[:copper])||
       trade([:copper,:copper,:wood,:wood],[:tools])||
       trade([:copper_ore,:zinc_ore,:charcoal],[:bronze])||
@@ -306,6 +307,41 @@ end
     }
   end
 end
+
+class Weaponsmith < Building
+def initialize
+  super("Weaponsmith", {:stone=>30},[],[:tools,:stone_club,:copper_sword,:bronze_sword,:iron_sword],"\
+ |
+ |
+---
+ #")
+end
+  def produce
+    population{
+      Researched["spear"] && trade([:steel,:wood],[:steel_spear])||
+      Researched["spear"] && trade([:iron,:wood],[:iron_spear])||
+      Researched["spear"] && trade([:bronze,:wood],[:bronze_spear])||
+      Researched["spear"] && trade([:copper,:wood],[:copper_spear])||
+      trade([:stone,:wood],[:stone_club])||
+      Researched["sword"] && trade([:steel,:tools],[:steel_sword])||
+      Researched["sword"] && trade([:iron,:tools],[:iron_sword])||
+      Researched["sword"] && trade([:bronze,:tools],[:bronze_sword])||
+      Researched["sword"] && trade([:copper,:tools],[:copper_sword])||
+      Researched["gunpowder"] && trade([:copper, :saltpepper],[:musket])
+      Researched["rifling"] && trade([:copper, :steel, :saltpepper],[:rifle])
+      Researched["explosives"] && trade([:bronze, :fertilizer],[:granade])
+      Researched["artillery"] && trade([:musket, :tools],[:culverin])
+      Researched["artillery"] && trade([:rifle, :tools],[:cannon])
+      Researched["artillery"] && trade([:cannon, :granade],[:mortar])
+
+
+
+
+    }
+  end
+end
+
+
 
 
 class Brewery < Building
@@ -484,7 +520,7 @@ def canbuild(building,x,y)
    return false if $World.player[x,y] != $World.player[$castle.x,$castle.y]
    building.display.split("\n").each_with_index{|e,y1|
      e.split("").each_with_index{|c,x1|
-     return false if c != ?\ && $World.element[x+x1,y+y1] != ?\ 
+     return false if c[0] != ?\ && $World.element[x+x1,y+y1] != ?\ 
   }}
   true
 end

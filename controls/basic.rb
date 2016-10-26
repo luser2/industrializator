@@ -11,7 +11,7 @@ class Move < Command
 		if $roadmode && $World.building[$x,$y]
 		  addoutput($World.building[$x,$y],$x+@cord[0],$y+@cord[1])
 		end
-		if $roadmode && $World.element[$x,$y]==?\ 
+		if $roadmode && $World.element[$x,$y]==?\ && !$trybuild && $World.player[$x,$y] == $World.player[$castle.x,$castle.y]
 		   $World.element[$x,$y] = ?V if @cord == [0,1]
 		   $World.element[$x,$y] = ?^ if @cord == [0,-1]
 		   $World.element[$x,$y] = ?> if @cord == [1,0]

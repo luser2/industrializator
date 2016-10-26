@@ -146,6 +146,15 @@ IntroResearch["warrior code"] = "You don't have enough lebensraum. You noticed t
 
 IntroResearch["construction"] = "Your masons could now upgrade buildings, press u on building to increase its max population by one for 20 stone. On build screen toggle u to set if new buildings are fully upgraded automatically"
 
+IntroResearch["tactics"] = 
+"Chargeee!!!
+(Attila)
+
+By researching basic military tactics soldiers became more coordinated. Now two soldiers with same equipment will group into one unit.
+"
+
+
+
 def researchmenu
   text = "Research\n"
   accessible = []

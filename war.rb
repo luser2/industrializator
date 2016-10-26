@@ -1,13 +1,19 @@
 require 'controls/battle.rb'
+$weapon_rating = {nil => 1, :stone_club => 2, :bow => 4}
+$armor_rating = {nil => 0}
+$weapon_range = {:bow => 6, :musket => 4}
+$armor_piercing ={:musket =>true}
+$explosive = {:granade =>true, :mortar=>true}
+
 
 class Soldier
   attr_reader :weapon,:armor,:vehicle
-  def initialize(barracks)
+  def initialize(barracks,weapon = nil, armor = nil, vehicle = nil)
     @barracks=barracks
     @training=0
-    @weapon = nil
-    @armor = nil
-    @vehicle = nil
+    @weapon = weapon
+    @armor = armor
+    @vehicle = vehicle
   end
   def progress
     if !@weapon
@@ -38,8 +44,33 @@ class Soldier
     return 2 if @vehicle == :horse
     return 1
   end
+  def range
+    $weapon_range[@weapon] || 1
+  end
+  def ar
+    if weapon == :bow
+      p = [0.3,@training / 100.0].max
+    else
+      p = 0.3
+    end 
+    d = $weapon_rating[weapon]
+    r = 0
+    if $armor_piercing[weapon]
+      r = d if rand() < 0.3
+    else
+      d.times{ r += 1 if rand() < p}
+    end
+    r
+  end
+  def dr
+    d = $armor_rating[armor]
+    r = 0
+    d.times{ r += 1 if rand() < 0.3}
+    r
+  end
+
   def killed(enemy)
-    true
+    return ar > enemy.dr
   end
 end
 
@@ -52,7 +83,7 @@ class Unit
     @x = x
     @y = y
     $battle.element[x,y]=?@
-    @range = 1
+    @range = soldiers[0].range
     @maxmp = soldiers[0].mp
     @player = p
     @units = u
@@ -70,7 +101,7 @@ class Unit
   end
   def canattack
     units.each{|u|
-      return u if (u.x-x)**2+(u.y-y)**2<=range && u.player != player
+      return u if (u.x-x)**2+(u.y-y)**2<=range**2 && u.player != player && u.alive
     }
     nil
   end
@@ -80,12 +111,16 @@ class Unit
     u, v = v, u if u.first_strike && !v.first_strike
     v.soldiers.each{|s|
       if u.soldiers[-1]
-        u.soldiers.pop if s.killed(u.soldiers[-1])
+        ($explosive[s.weapon] ? u.soldiers.size : 1).times{
+          u.soldiers.pop if s.killed(u.soldiers[-1])
+        }
       end
     }
     u.soldiers.each{|s|
       if v.soldiers[-1]
-        v.soldiers.pop if s.killed(v.soldiers[-1])
+        if !$explosive[s.weapon]
+          v.soldiers.pop if s.killed(v.soldiers[-1])
+        end
       end
     }
     $battle.element[u.x,u.y]=?+ if !u.alive
@@ -193,9 +228,8 @@ def attackmenu
 
   p0army = soldiers_to_units(p0soldiers,coordinated,0,units)
 
-  p1soldiers=[Soldier.new(nil)]
   
-  p1army = soldiers_to_units(p1soldiers,1,1,units)
+  p1army = soldiers_to_units($defenders[country],$defender_coordination[country],1,units)
  
   endbattle = false
 
@@ -270,4 +304,17 @@ def attackmenu
     popup("You conquered a tribe that breeds horses. Feed them to breed them. If you lose last horse you wont find them again.")
   end
 end
+
+$defenders = {}
+$defender_coordination = {}
+c = $World.player[21,18]
+$defenders[c] = [Soldier.new(nil)] * 2
+$defender_coordination = 1
+c = $World.player[41,8]
+$defenders[c] = [Soldier.new(nil)] * 10
+$defender_coordination = 3
+
+c = $World.player[40,1]
+$defenders[c] = [Soldier.new(nil)] * 6
+$defender_coordination = 2
 
