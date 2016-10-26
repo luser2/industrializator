@@ -8,12 +8,12 @@ $explosive = {:granade =>true, :mortar=>true}
 
 class Soldier
   attr_reader :weapon,:armor,:vehicle
-  def initialize(barracks,weapon = nil, armor = nil, vehicle = nil)
+  def initialize(barracks,w = nil, a = nil, v = nil)
     @barracks=barracks
     @training=0
-    @weapon = weapon
-    @armor = armor
-    @vehicle = vehicle
+    @weapon = w
+    @armor = a
+    @vehicle = v
   end
   def progress
     if !@weapon
@@ -64,6 +64,8 @@ class Soldier
   end
   def dr
     d = $armor_rating[armor]
+    d+= $armor_rating[weapon] if $armor_rating[weapon]
+    d+= $armor_rating[vehicle] if $armor_rating[vehicle]
     r = 0
     d.times{ r += 1 if rand() < 0.3}
     r
@@ -82,17 +84,19 @@ class Unit
   def initialize(x,y,p,u,soldiers)
     @x = x
     @y = y
-    $battle.element[x,y]=?@
     @range = soldiers[0].range
     @maxmp = soldiers[0].mp
     @player = p
     @units = u
     @soldiers = soldiers
     startturn
+    move(x,y)
   end
   def move(nx,ny)
 	$battle.element[x,y]=?\ 
+
 	$battle.element[nx,ny]=?@
+        $battle.color[nx,ny]=color_pair(player == 0 ? COLOR_RED : COLOR_BLUE)|A_NORMAL
 	@x=nx
 	@y=ny
 	@mp -= 1
@@ -117,14 +121,14 @@ class Unit
       end
     }
     u.soldiers.each{|s|
-      if v.soldiers[-1]
+      if v.soldiers[-1] && (u.x-v.x)**2+(u.y-v.y)**2<=u.range**2
         if !$explosive[s.weapon]
           v.soldiers.pop if s.killed(v.soldiers[-1])
         end
       end
     }
-    $battle.element[u.x,u.y]=?+ if !u.alive
-    $battle.element[x,y]=?+ if !alive
+    $battle.element[u.x,u.y]=?\  if !u.alive
+    $battle.element[x,y]=?\  if !alive
 
   end
   def startturn
@@ -134,19 +138,35 @@ class Unit
 	$x=x
 	$y=y
   end
+  def bfs
+    dir = Array2D.new
+    stay = [x,y]
+    visit =[[x+1,y],[x-1,y],[x,y+1],[x,y-1]]
+    visit.each{|a| dir[*a]=a}
+    i = 0
+    while visit[i]
+      x,y = *visit[i]
+      units.each{|u|
+        return dir[*visit[i]] if u.x == x && u.y == y && alive && player != u.player
+      }
+      if $battle.element[x,y]==?\ 
+        [[-1,0],[1,0],[0,1],[0,-1]].each{|s| nx, ny= x + s[0], y + s[1]
+          if !dir[nx,ny]
+	    dir[nx,ny] = dir[x,y]
+	    visit << [nx, ny]
+ 	  end
+        }
+      end
+      i+=1
+    end
+    stay
+  end
+
   def aiturn
-    target = nil
-	$out.puts inspect
-    units.each{|u|
-	$out.puts u.inspect
-	$out.puts u.alive
-	$out.puts player
-       target = u if u.alive && u.player != player 
+    mp.times{
+      nx, ny = *bfs
+      move(nx, ny) if $battle.element[nx,ny] == ?\ 
     }
-    return if !target
-    sx = sgn(target.x - x)
-    sy = sgn(target.y - y)
-    move(x + sx, y + sy) if $battle.element[x+sx,y+sy] == ?\ 
     if canattack
       attack(canattack)
     end
@@ -190,6 +210,7 @@ def soldiers_to_units(soldiers,coordinated,player,units)
     x,y = *emptyright
    end
   army << Unit.new(x,y,player,units,u)
+  $out.puts "army"
   $out.puts army.inspect
   return army
 end
@@ -203,11 +224,6 @@ def attackmenu
      neighbor = true  if $World.player[$x+dx,$y+dy] == $World.player[$castle.x,$castle.y]
   }}
   return if !country || !neighbor
-  oldx = $x
-  oldy = $y
-  $x=0
-  $y=0
-
   $battle = World.new("combat1.map")
 
   units = []
@@ -223,12 +239,19 @@ def attackmenu
     return
   end
 
+  oldx = $x
+  oldy = $y
+  $x=0
+  $y=0
+
   coordinated = 1
   coordinated += 1 if Researched["tactics"] 
 
   p0army = soldiers_to_units(p0soldiers,coordinated,0,units)
 
-  
+  $out.puts country
+  $out.puts $defenders[country].inspect 
+  $out.puts $defender_coordination[country]
   p1army = soldiers_to_units($defenders[country],$defender_coordination[country],1,units)
  
   endbattle = false
@@ -245,7 +268,8 @@ def attackmenu
     $unit = units[i]
     if $unit.alive
     if $unit.player == 0
-      if $unit.mode == :move && $unit.mp == 0
+      if $unit.mode == :move && ($unit.mp == 0 || $unit.attacked)
+	$unit.attacked = false
         if $unit.canattack
           $unit.mode = :attack
         else
@@ -264,9 +288,18 @@ def attackmenu
       nextunit = true
     end
 
-    Info.addstr(2,"moves: #{$unit.mp}/#{$unit.maxmp}")
-    Info.addstr(3,"mode: #{$unit.mode}")
-    Info.addstr(3,"mode: #{$unit.mode}")
+
+    info = $unit
+    units.each{|u| info = u if u.x == $x && u.y == $y && u.alive}
+    if info.alive
+      Info.addstr(2,"moves: #{info.mp}/#{info.maxmp}")
+      Info.addstr(3,"mode: #{info.mode}")
+      Info.addstr(4,"soldiers: #{info.soldiers.size}")
+      Info.addstr(5,"weapon: #{info.soldiers[0].weapon}")
+      Info.addstr(6,"armor: #{info.soldiers[0].armor}")
+      Info.addstr(7,"vehicle: #{info.soldiers[0].vehicle}")
+    end
+
 
     Info.refresh
     $battle.draw
@@ -309,12 +342,26 @@ $defenders = {}
 $defender_coordination = {}
 c = $World.player[21,18]
 $defenders[c] = [Soldier.new(nil)] * 2
-$defender_coordination = 1
+$defender_coordination[c] = 1
 c = $World.player[41,8]
+$defenders[c] = [Soldier.new(nil,:stone_club,nil,:horse)] * 20
+$defender_coordination[c] = 3
+c = $World.player[77,7]
 $defenders[c] = [Soldier.new(nil)] * 10
-$defender_coordination = 3
+$defender_coordination[c] = 3
+c = $World.player[77,21]
+$defenders[c] = [Soldier.new(nil)] * 10
+$defender_coordination[c] = 3
+
 
 c = $World.player[40,1]
 $defenders[c] = [Soldier.new(nil)] * 6
-$defender_coordination = 2
-
+$defender_coordination[c] = 2
+c = $World.player[54,1]
+$defenders[c] = [Soldier.new(nil)] * 6
+$defender_coordination[c] = 2
+c = $World.player[68,1]
+$defenders[c] = [Soldier.new(nil)] * 6
+$defender_coordination[c] = 2
+$out.puts "def"
+$out.puts $defenders.inspect

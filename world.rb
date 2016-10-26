@@ -35,10 +35,7 @@ class World
 		}
     players=0
     @element.each_index{|e,x,y| 
-	$out.puts "#{x} #{y} #{players}"
-
       if !@player[x,y]
-	$out.puts "#{x} #{y} #{players}"
 	players+=1
         playerdfs(players,x,y)
       end
@@ -46,8 +43,9 @@ class World
   end
   def playerdfs(color,x,y)
     return if @player[x,y]
+    return if element[x,y] == ?#
     @player[x,y]=color
-    return if [?#,?B].index(element[x,y])
+    return if element[x,y] == ?B
     playerdfs(color,x,y+1)
     playerdfs(color,x,y-1)
     playerdfs(color,x+1,y)
@@ -81,7 +79,7 @@ end
      else
        Disp.show(Disp.wid/2, Disp.hei/2,?X,@color[0,0])
      end
-     Info.addstr(0,"x:#{$x}, y:#{$y}")
+     Info.addstr(0,"x:#{$x}, y:#{$y} p:#{@player[$x,$y]}")
      Info.addstr(1,"")
      Info.addstr(2,"")
 

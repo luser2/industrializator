@@ -466,7 +466,7 @@ nx=ny=0
 }
 return false if nearest == 100
 $World.element[nx,ny]=?\ 
-$World.color[nx,ny]=color_pair(COLOR_GREEN)|A_NORMAL
+$World.color[nx,ny]=color_pair(COLOR_WHITE)|A_NORMAL
 $planttree<<[nx,ny]
 true
 end
